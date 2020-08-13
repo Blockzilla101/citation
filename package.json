@@ -1,0 +1,9 @@
+{
+    "name": "citation-gen",
+    "version": "0.0.5",
+    "dependencies": {
+        "canvas": "^2.6.1"
+    },
+    "author": "Blockzilla101",
+    "main": "src/main.js"
+}
