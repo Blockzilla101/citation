@@ -1,5 +1,5 @@
-const { createCanvas, Canvas, registerFont, NodeCanvasRenderingContext2D, loadImage, Image } = require('canvas');
-const { text, textWrapped, line, dottedLine, barcode, rect } = require('./util');
+const { createCanvas, Canvas, registerFont, loadImage, Image } = require('canvas');
+const { text, textWrapped, line, dottedLine, barcode, rect, textFitsHeight, textFitsWidth } = require('./util');
 
 const fs = require('fs');
 
@@ -33,7 +33,7 @@ module.exports.Citation = class Citation {
     #height = 160;
 
     /** @type {boolean} Should it resize automatically when text is overflowing*/
-    #autoResizeToText = false;
+    #autoResizeToText = true;
 
     /** @type {Image} The logo put at the bottom-mid the citation*/
     #logo = null
@@ -47,9 +47,9 @@ module.exports.Citation = class Citation {
     #outputFile = './Citation.png';
 
     /** @type {string} Title of the citation*/
-    title = "M.O.A. CITATION";
+    title = "M.O.A. CITATION".repeat(10);
     /** @type {string} Content/Reason for the citation*/
-    content = 'Protocol Violated.\nEntry Permit: Invalid Name';
+    reason = 'Protocol Violated.\nEntry Permit: Invalid Name\n'.repeat(10);
     /** @type {string} Penalties of the citation*/
     penalty = 'LAST WARNING - NO PENALTY';
 
@@ -72,7 +72,46 @@ module.exports.Citation = class Citation {
     #fontSize = 16;
     /** @type {string} */
     #font = `${this.#fontSize}px BMmini`;
-    /** @type {number} */
+
+    /** @type {number|null} */
+    #sideDotsSpacingFromLeft = null;
+    /** @type {number|null} */
+    #sideDotsSpacingFromTop = null;
+    /** @type {number|null} */
+    #sideDotsSpacingFromRight = null;
+
+    /** @type {number|null} */
+    #separatorSpacingFromLeft = null;
+    /** @type {number|null} */
+    #separatorSpacingFromRight = null;
+
+    /** @type {number|null} */
+    #topSeparatorSpacingFromTop = null;
+    /** @type {number|null} */
+    #bottomSeparatorSpacingFromBottom = null;
+
+    /** @type {number|null} */
+    #barcodeSpacingFromRight = null;
+    /** @type {number|null} */
+    #barcodeSpacingFromTop = null;
+
+    /** @type {number|null} */
+    #textSpacingFromLeft = null;
+
+    /** @type {number|null} */
+    #titleSpacingFromTop = null;
+    /** @type {number|null} */
+    #titleMaxWidth = null;
+
+    /** @type {number|null} */
+    #reasonSpacingFromTop = null;
+    /** @type {number|null} */
+    #reasonMaxWidth = null;
+    /** @type {number|null} */
+    #reasonMaxHeight = null;
+
+    /** @type {number|null} */
+    #penaltySpacingFromBottom = null;
 
     /** @param {string} outputFile */
     constructor(outputFile) {
@@ -86,71 +125,158 @@ module.exports.Citation = class Citation {
     }
 
     async draw() {
-        let sideDotsSpacingFromLeft = this.#sideDotSpacing;
-        let sideDotsSpacingFromTop = this.#sideDotSpacing + this.#topBottomDotSize;
-        let sideDotsSpacingFromRight = this.#sideDotSpacing + (this.#topBottomDotSize) + 2;
+        this.calculate();
 
-        let separatorSpacingFromLeft = sideDotsSpacingFromLeft + this.#sideDotSize + 6;
-        let separatorSpacingFromRight = sideDotsSpacingFromRight + this.#sideDotSize + 6;
+        if (this.#autoResizeToText) {
+            while (!textFitsWidth(this.title, this.#font, this.#ctx, this.#titleMaxWidth)) {
+                this.#canvas.width += this.#ctx.measureText(this.title).width * 0.1;
+                this.#width = this.#canvas.width;
+                this.calculate();
+            }
 
-        let topSeparatorSpacingFromTop = this.#topBottomDotSize + (this.#fontSize * 2);
-        let bottomSeparatorSpacingFromBottom = this.#topBottomDotSize + (this.#fontSize * 2) + 10;
+            while (!textFitsWidth(this.penalty, this.#font, this.#ctx, this.#titleMaxWidth)) {
+                this.#canvas.width += this.#ctx.measureText(this.penalty).width * 0.1;
+                this.#width = this.#canvas.width;
+                this.calculate();
+            }
 
-        let barcodeSpacingFromRight = sideDotsSpacingFromRight + this.#sideDotSize + 8;
-        let barcodeSpacingFromTop = this.#topBottomDotSize + 4;
+            while (!textFitsWidth(this.reason, this.#font, this.#ctx, this.#reasonMaxWidth)) {
+                this.#canvas.width += this.#ctx.measureText(this.reason).width * 0.1;
+                this.#width = this.#canvas.width;
+                this.calculate();
+            }
 
-        let textSpacingFromLeft = this.#sideDotSpacing + this.#sideDotSize + 12;
-
-        let titleSpacingFromTop = this.#topBottomDotSize + this.#fontSize + 2;
-        let titleMaxWidth = this.width - (barcodeSpacingFromRight + (this.#barcode.length * this.#barcodeWidth) + (this.#barcodeWidth * 3) + textSpacingFromLeft + this.#fontSize);
-
-        let reasonSpacingFromTop = topSeparatorSpacingFromTop + this.#separatorDotSize + this.#fontSize + 4;
-        let reasonMaxWidth = this.width - (textSpacingFromLeft + sideDotsSpacingFromRight + this.#sideDotSize);
-
-        let penaltySpacingFromBottom = bottomSeparatorSpacingFromBottom - this.#fontSize - 10;
+            while (!textFitsHeight(this.reason, this.#font, this.#ctx, this.#reasonMaxHeight)) {
+                let metrics = this.#ctx.measureText(this.reason);
+                this.#canvas.height += (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent) * 0.03;
+                this.#height = this.#canvas.height;
+                this.calculate();
+            }
+        }
 
         // Bg
         rect(0, 0, this.width, this.height, this.moaBg, this.#ctx);
 
         // Logo
         this.#logo = await loadImage('./data/logo.png');
-        this.#ctx.drawImage(this.#logo, (this.#width / 2) - (this.#logo.height / 2) - 1, this.height - (bottomSeparatorSpacingFromBottom + (this.#logo.height / 2)) + 4);
+        this.#ctx.drawImage(this.#logo, (this.#width / 2) - (this.#logo.height / 2) - 1, this.height - (this.#bottomSeparatorSpacingFromBottom + (this.#logo.height / 2)) + 4);
 
         // Top and bottom dots
         dottedLine(0, this.#topBottomDotSize / 2, this.#width, this.#topBottomDotSize / 2, this.moaFg, [this.#topBottomDotSize, this.#topBottomDotSize], this.#ctx, this.#topBottomDotSize);
         dottedLine(this.#topBottomDotSize, this.#height - this.#topBottomDotSize / 2, this.#width, this.#height - this.#topBottomDotSize / 2, this.moaFg, [this.#topBottomDotSize, this.#topBottomDotSize], this.#ctx, this.#topBottomDotSize);
 
         // Dots on the sides
-        dottedLine(sideDotsSpacingFromLeft + (this.#sideDotSize / 2), sideDotsSpacingFromTop, sideDotsSpacingFromLeft + (this.#sideDotSize / 2), this.#height - this.#topBottomDotSize, this.moaFg, [this.#sideDotSize, this.#sideDotSize * 2], this.#ctx, this.#sideDotSize);
-        dottedLine(this.#width - sideDotsSpacingFromRight - (this.#sideDotSize / 2), sideDotsSpacingFromTop, this.#width - sideDotsSpacingFromRight - (this.#sideDotSize / 2), this.#height - this.#topBottomDotSize, this.moaFg, [this.#sideDotSize, this.#sideDotSize * 2], this.#ctx, this.#sideDotSize);
+        dottedLine(this.#sideDotsSpacingFromLeft + (this.#sideDotSize / 2), this.#sideDotsSpacingFromTop, this.#sideDotsSpacingFromLeft + (this.#sideDotSize / 2), this.#height - this.#topBottomDotSize, this.moaFg, [this.#sideDotSize, this.#sideDotSize * 2], this.#ctx, this.#sideDotSize);
+        dottedLine(this.#width - this.#sideDotsSpacingFromRight - (this.#sideDotSize / 2), this.#sideDotsSpacingFromTop, this.#width - this.#sideDotsSpacingFromRight - (this.#sideDotSize / 2), this.#height - this.#topBottomDotSize, this.moaFg, [this.#sideDotSize, this.#sideDotSize * 2], this.#ctx, this.#sideDotSize);
 
         // Separators
-        dottedLine(separatorSpacingFromLeft, topSeparatorSpacingFromTop + (this.#separatorDotSize / 2), this.#width - separatorSpacingFromRight, topSeparatorSpacingFromTop + (this.#separatorDotSize / 2), this.moaFt, [this.#separatorDotSize, this.#separatorDotSize], this.#ctx, this.#separatorDotSize);
-        dottedLine(separatorSpacingFromLeft, this.height - (bottomSeparatorSpacingFromBottom + (this.#separatorDotSize / 2)), this.#width - separatorSpacingFromRight, this.height - (bottomSeparatorSpacingFromBottom + (this.#separatorDotSize / 2)), this.moaFt, [this.#separatorDotSize, this.#separatorDotSize], this.#ctx, this.#separatorDotSize);
+        dottedLine(this.#separatorSpacingFromLeft, this.#topSeparatorSpacingFromTop + (this.#separatorDotSize / 2), this.#width - this.#separatorSpacingFromRight, this.#topSeparatorSpacingFromTop + (this.#separatorDotSize / 2), this.moaFt, [this.#separatorDotSize, this.#separatorDotSize], this.#ctx, this.#separatorDotSize);
+        dottedLine(this.#separatorSpacingFromLeft, this.height - (this.#bottomSeparatorSpacingFromBottom + (this.#separatorDotSize / 2)), this.#width - this.#separatorSpacingFromRight, this.height - (this.#bottomSeparatorSpacingFromBottom + (this.#separatorDotSize / 2)), this.moaFt, [this.#separatorDotSize, this.#separatorDotSize], this.#ctx, this.#separatorDotSize);
 
         // Line at the side
         line(this.#width - (this.#topBottomDotSize / 2), 0, this.#width - (this.#topBottomDotSize / 2), this.#height, this.moaFg, this.#ctx, this.#topBottomDotSize);
 
         // Barcode
-        barcode(this.#width - barcodeSpacingFromRight - (this.#barcode.length * this.#barcodeWidth), barcodeSpacingFromTop, this.#barcode, this.#barcodeHeight, this.#barcodeWidth, this.moaFt, this.moaBg, this.#ctx);
-        rect(this.#width - barcodeSpacingFromRight - (this.#barcode.length * this.#barcodeWidth) - (this.#barcodeWidth * 3), barcodeSpacingFromTop, this.#barcodeWidth * 2, this.#barcodeHeight / 2, this.moaFt, this.#ctx);
+        barcode(this.#width - this.#barcodeSpacingFromRight - (this.#barcode.length * this.#barcodeWidth), this.#barcodeSpacingFromTop, this.#barcode, this.#barcodeHeight, this.#barcodeWidth, this.moaFt, this.moaBg, this.#ctx);
+        rect(this.#width - this.#barcodeSpacingFromRight - (this.#barcode.length * this.#barcodeWidth) - (this.#barcodeWidth * 3), this.#barcodeSpacingFromTop, this.#barcodeWidth * 2, this.#barcodeHeight / 2, this.moaFt, this.#ctx);
 
         // Title
-        text(this.title, textSpacingFromLeft, titleSpacingFromTop, this.#font, this.moaFt, this.#ctx, 'left', titleMaxWidth);
+        text(this.title, this.#textSpacingFromLeft, this.#titleSpacingFromTop, this.#font, this.moaFt, this.#ctx, 'left', this.#titleMaxWidth);
 
         // Reason
-        textWrapped(this.content, textSpacingFromLeft, reasonSpacingFromTop, this.#font, this.moaFt, this.#ctx, reasonMaxWidth)
+        textWrapped(this.reason, this.#textSpacingFromLeft, this.#reasonSpacingFromTop, this.#font, this.moaFt, this.#ctx, this.#reasonMaxWidth, this.#reasonMaxHeight)
 
         // Penalty
-        text(this.penalty, (this.#width / 2) - 3, this.#height - penaltySpacingFromBottom, this.#font, this.moaFt, this.#ctx, 'center', reasonMaxWidth);
+        text(this.penalty, (this.#width / 2) - 3, this.#height - this.#penaltySpacingFromBottom, this.#font, this.moaFt, this.#ctx, 'center', this.#reasonMaxWidth);
 
         fs.writeFileSync(this.#outputFile, this.#canvas.toBuffer());
     }
 
-    async animate() {
+    async animated() {
         await this.draw();
-        let citation = loadImage(this.#outputFile);
+        this.calculate();
+        
+        let citation = await loadImage(this.#outputFile);
+        let framesLocation = './frames';
+        const frameName = 'frame';
 
+        let canvas = createCanvas(citation.width, citation.height);
+        let ctx = canvas.getContext('2d');
+
+        let currentFrame = 0;
+
+        function moveBy(amount) {
+            ctx.clearRect(0, 0, citation.width, citation.height);
+            ctx.drawImage(citation, 0, amount); save();
+            currentFrame += 1;
+        }
+
+        function save() {
+            fs.writeFileSync(`${framesLocation}/${frameName}_${currentFrame}.png`, canvas.toBuffer());
+        }
+
+        let increments = 2;
+        let pause = 14;
+        let bigPause = 100;
+
+        let startingPoint = this.#sideDotsSpacingFromTop;
+        let stopOne = this.#topSeparatorSpacingFromTop + increments;
+        let stopTwo = this.height - this.#bottomSeparatorSpacingFromBottom + increments;
+
+        const animation = [];
+
+        animation.push(startingPoint)
+        for (let i = startingPoint + increments; i < stopOne; i += increments) {
+            animation.push(i);
+        }
+
+        for (let i = 0; i < pause; i++) animation.push(stopOne);
+        for (let i = stopOne + increments; i < stopTwo; i += increments) {
+            animation.push(i);
+        }
+
+        for (let i = 0; i < pause; i++) animation.push(stopTwo);
+        for (let i = stopTwo + increments; i < this.#height; i += increments) {
+            animation.push(i);
+        }
+
+        for (let i = 0; i < bigPause; i++) animation.push(this.#height);
+
+        for (let i = this.#height; i >= 0; i -= increments) {
+            animation.push(i);
+        }
+
+        for (let i = 0; i < bigPause / 2; i++) animation.push(0);
+
+        for (let i = 0; i < animation.length; i++) {
+            moveBy(citation.height - animation[i]);
+        }
+    }
+    
+    calculate() {
+        this.#sideDotsSpacingFromLeft = this.#sideDotSpacing;
+        this.#sideDotsSpacingFromTop = this.#sideDotSpacing + this.#topBottomDotSize;
+        this.#sideDotsSpacingFromRight = this.#sideDotSpacing + (this.#topBottomDotSize) + 2;
+
+        this.#separatorSpacingFromLeft = this.#sideDotsSpacingFromLeft + this.#sideDotSize + 6;
+        this.#separatorSpacingFromRight = this.#sideDotsSpacingFromRight + this.#sideDotSize + 6;
+
+        this.#topSeparatorSpacingFromTop = this.#topBottomDotSize + (this.#fontSize * 2);
+        this.#bottomSeparatorSpacingFromBottom = this.#topBottomDotSize + (this.#fontSize * 2) + 10;
+
+        this.#barcodeSpacingFromRight = this.#sideDotsSpacingFromRight + this.#sideDotSize + 8;
+        this.#barcodeSpacingFromTop = this.#topBottomDotSize + 4;
+
+        this.#textSpacingFromLeft = this.#sideDotSpacing + this.#sideDotSize + 12;
+
+        this.#titleSpacingFromTop = this.#topBottomDotSize + this.#fontSize + 2;
+        this.#titleMaxWidth = this.width - (this.#barcodeSpacingFromRight + (this.#barcode.length * this.#barcodeWidth) + (this.#barcodeWidth * 3) + this.#textSpacingFromLeft + this.#fontSize);
+
+        this.#reasonSpacingFromTop = this.#topSeparatorSpacingFromTop + this.#separatorDotSize + this.#fontSize + 4;
+        this.#reasonMaxWidth = this.width - (this.#textSpacingFromLeft + this.#sideDotsSpacingFromRight + this.#sideDotSize);
+        this.#reasonMaxHeight = this.height - (this.#topSeparatorSpacingFromTop + this.#bottomSeparatorSpacingFromBottom + this.#fontSize);
+
+        this.#penaltySpacingFromBottom = this.#bottomSeparatorSpacingFromBottom - this.#fontSize - 10;
     }
 
     set height(value) {

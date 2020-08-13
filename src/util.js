@@ -1,3 +1,5 @@
+const { NodeCanvasRenderingContext2D } = require('canvas');
+
 /** @typedef {NodeCanvasRenderingContext2D} RenderingContext*/
 /** @typedef {string|CanvasGradient|CanvasPattern} Style*/
 /** @typedef {"center"|"end"|"left"|"right"|"start"} TextAlignment*/
@@ -146,6 +148,31 @@ function rect(x, y, w, h, style, ctx) {
     ctx.fillRect(x, y, w, h);
 }
 
+/**
+ * @param {string} text
+ * @param {string} font
+ * @param {RenderingContext} ctx
+ * @param {number|null} maxWidth
+ * @return {boolean}
+ */
+function textFitsWidth(text, font, ctx, maxWidth) {
+    ctx.font = font;
+    return ctx.measureText(text).width <= maxWidth;
+}
+
+/**
+ * @param {string} text
+ * @param {string} font
+ * @param {RenderingContext} ctx
+ * @param {number|null} maxHeight
+ * @return {boolean}
+ */
+function textFitsHeight(text, font, ctx, maxHeight) {
+    ctx.font = font;
+    let metrics = ctx.measureText(text);
+    return metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent <= maxHeight;
+}
+
 module.exports = {
     line: line,
     dottedLine: dottedLine,
@@ -153,4 +180,6 @@ module.exports = {
     barcode: barcode,
     textWrapped: textWrapped,
     text: text,
+    textFitsHeight: textFitsHeight,
+    textFitsWidth: textFitsWidth
 }

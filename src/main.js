@@ -22,8 +22,12 @@ citation.sideDotSize = 6
 citation.sideDotSpacing = 4;
 
 // citation.barcode = randomBarcode(11);
+// let anim = process.hrtime();
+// citation.animated().then(() => {
+//     console.log(`Took ${parseHrtimeToSeconds(process.hrtime(anim))}secs to make animated gif`);
+// });
 
 let start = process.hrtime();
 citation.draw().then(() => {
-    console.log(`Took ${parseHrtimeToSeconds(process.hrtime(start))}secs`);
+    console.log(`Took ${parseHrtimeToSeconds(process.hrtime(start))}secs to make static`);
 });
