@@ -33,7 +33,7 @@ module.exports.Citation = class Citation {
     #height = 160;
 
     /** @type {boolean} Should it resize automatically when text is overflowing*/
-    #autoResizeToText = true;
+    #autoResizeToText = false;
 
     /** @type {Image} The logo put at the bottom-mid the citation*/
     #logo = null
@@ -47,9 +47,9 @@ module.exports.Citation = class Citation {
     #outputFile = './Citation.png';
 
     /** @type {string} Title of the citation*/
-    title = "M.O.A. CITATION".repeat(10);
+    title = "M.O.A. CITATION";
     /** @type {string} Content/Reason for the citation*/
-    reason = 'Protocol Violated.\nEntry Permit: Invalid Name\n'.repeat(10);
+    reason = 'Protocol Violated.\nEntry Permit: Invalid Name';
     /** @type {string} Penalties of the citation*/
     penalty = 'LAST WARNING - NO PENALTY';
 
@@ -113,12 +113,19 @@ module.exports.Citation = class Citation {
     /** @type {number|null} */
     #penaltySpacingFromBottom = null;
 
-    /** @param {string} outputFile */
-    constructor(outputFile) {
+    /**
+     * @param {string} outputFile
+     * @param {number} [width=366]
+     * @param {number} [height=160]
+     */
+    constructor(outputFile, width = 366, height = 160) {
         this.#outputFile = outputFile;
 
         this.#canvas = createCanvas(this.#width, this.#height);
         this.#ctx = this.#canvas.getContext('2d');
+
+        this.width = width;
+        this.height = height;
 
         this.#ctx.imageSmoothingEnabled = false;
         this.#ctx.antialias = 'none';
@@ -252,7 +259,10 @@ module.exports.Citation = class Citation {
             moveBy(citation.height - animation[i]);
         }
     }
-    
+
+    /**
+     * Recalculates the values variables that make up the citation
+     */
     calculate() {
         this.#sideDotsSpacingFromLeft = this.#sideDotSpacing;
         this.#sideDotsSpacingFromTop = this.#sideDotSpacing + this.#topBottomDotSize;
@@ -270,11 +280,11 @@ module.exports.Citation = class Citation {
         this.#textSpacingFromLeft = this.#sideDotSpacing + this.#sideDotSize + 12;
 
         this.#titleSpacingFromTop = this.#topBottomDotSize + this.#fontSize + 2;
-        this.#titleMaxWidth = this.width - (this.#barcodeSpacingFromRight + (this.#barcode.length * this.#barcodeWidth) + (this.#barcodeWidth * 3) + this.#textSpacingFromLeft + this.#fontSize);
+        this.#titleMaxWidth = this.#width - (this.#barcodeSpacingFromRight + (this.#barcode.length * this.#barcodeWidth) + (this.#barcodeWidth * 3) + this.#textSpacingFromLeft + this.#fontSize);
 
         this.#reasonSpacingFromTop = this.#topSeparatorSpacingFromTop + this.#separatorDotSize + this.#fontSize + 4;
-        this.#reasonMaxWidth = this.width - (this.#textSpacingFromLeft + this.#sideDotsSpacingFromRight + this.#sideDotSize);
-        this.#reasonMaxHeight = this.height - (this.#topSeparatorSpacingFromTop + this.#bottomSeparatorSpacingFromBottom + this.#fontSize);
+        this.#reasonMaxWidth = this.#width - (this.#textSpacingFromLeft + this.#sideDotsSpacingFromRight + this.#sideDotSize);
+        this.#reasonMaxHeight = this.#height - (this.#topSeparatorSpacingFromTop + this.#bottomSeparatorSpacingFromBottom + this.#fontSize);
 
         this.#penaltySpacingFromBottom = this.#bottomSeparatorSpacingFromBottom - this.#fontSize - 10;
     }
@@ -326,6 +336,17 @@ module.exports.Citation = class Citation {
         this.#barcode = value;
     }
 
+    /** @param {boolean} value Note: doesn't scales well **/
+    set autoResizeToText(value) {
+        this.#autoResizeToText = value;
+    }
+
+    /** @param {number} value WARNING: Does not scale well**/
+    set fontSize(value) {
+        this.#fontSize = value;
+        this.#font = `${value}px BMmini`;
+    }
+
     /** @return {number} */
     get height() { return this.#height; }
     /** @return {number} */
@@ -348,5 +369,11 @@ module.exports.Citation = class Citation {
     get barcodeHeight() { return this.#barcodeHeight; }
     /** @return {number[]} */
     get barcode() { return this.#barcode; }
+
+    /** @return {boolean} */
+    get autoResizeToText() { return this.#autoResizeToText; }
+
+    /** @return {number} value **/
+    get fontSize() { return this.#fontSize; }
 }
 

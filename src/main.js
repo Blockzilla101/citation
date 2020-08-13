@@ -21,13 +21,16 @@ citation.topBottomDotSize = 2;
 citation.sideDotSize = 6
 citation.sideDotSpacing = 4;
 
+citation.autoResizeToText = true;
+citation.fontSize = 16;
+
 // citation.barcode = randomBarcode(11);
 // let anim = process.hrtime();
 // citation.animated().then(() => {
-//     console.log(`Took ${parseHrtimeToSeconds(process.hrtime(anim))}secs to make animated gif`);
+//     console.log(`Took ${parseHrtimeToSeconds(process.hrtime(anim))}s to make animated gif`);
 // });
 
 let start = process.hrtime();
 citation.draw().then(() => {
-    console.log(`Took ${parseHrtimeToSeconds(process.hrtime(start))}secs to make static`);
+    console.log(`Took ${parseHrtimeToSeconds(process.hrtime(start))}s to make static citation`);
 });
