@@ -1,5 +1,5 @@
 {
-    "name": "citation-gen",
+    "name": "citation",
     "version": "0.0.7",
     "dependencies": {
         "canvas": "^2.6.1",

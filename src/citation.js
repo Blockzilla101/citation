@@ -253,7 +253,7 @@ module.exports.Citation = class Citation {
 
         for (let i = 0; i < bigPause / 2; i++) animation.push(0);
 
-        encoder.createReadStream().pipe(fs.createWriteStream(this.#outputFile.match(/\.((png)|(jpg)|(jpeg))/i) ? this.#outputFile.match(/(.+(?=\.((png)|(jpg)|(jpeg))))/i)[0] + '.gif' : this.#outputFile + '.gif'));
+        encoder.createReadStream().pipe(fs.createWriteStream(this.#outputFile));
         encoder.setRepeat(0);
         encoder.setDelay(10);
         encoder.setQuality(10);
@@ -379,6 +379,9 @@ module.exports.Citation = class Citation {
     /** @return {boolean} */
     get autoResizeToText() { return this.#autoResizeToText; }
 
-    /** @return {number} value **/
+    /** @return {number} **/
     get fontSize() { return this.#fontSize; }
+
+    /** @return {string} **/
+    get outputFile() { return this.#outputFile }
 }
