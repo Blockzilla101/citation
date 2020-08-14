@@ -1,6 +1,6 @@
 {
     "name": "citation-gen",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "dependencies": {
         "canvas": "^2.6.1",
         "gifencoder": "^2.0.1"
