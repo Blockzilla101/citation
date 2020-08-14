@@ -8,3 +8,5 @@ node_modules/*
 frames/*
 Citation*.png
 Citation*.gif
+
+src/main.js
