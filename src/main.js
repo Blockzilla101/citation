@@ -31,6 +31,6 @@ citation.fontSize = 16;
 // });
 
 let start = process.hrtime();
-citation.draw().then(() => {
+citation.generate().then(() => {
     console.log(`Took ${parseHrtimeToSeconds(process.hrtime(start))}s to make static citation`);
 });

@@ -2,7 +2,8 @@
     "name": "citation-gen",
     "version": "0.0.6",
     "dependencies": {
-        "canvas": "^2.6.1"
+        "canvas": "^2.6.1",
+        "gifencoder": "^2.0.1"
     },
     "author": "Blockzilla101",
     "main": "src/main.js"

@@ -1,5 +1,6 @@
 const { createCanvas, Canvas, registerFont, loadImage, Image } = require('canvas');
 const { text, textWrapped, line, dottedLine, barcode, rect, textFitsHeight, textFitsWidth } = require('./util');
+const Encoder = require('gifencoder');
 
 const fs = require('fs');
 
@@ -131,7 +132,12 @@ module.exports.Citation = class Citation {
         this.#ctx.antialias = 'none';
     }
 
-    async draw() {
+    async generate() {
+        await this.#draw();
+        fs.writeFileSync(this.#outputFile, this.#canvas.toBuffer())
+    }
+
+    #draw = async () => {
         this.calculate();
 
         if (this.#autoResizeToText) {
@@ -195,31 +201,23 @@ module.exports.Citation = class Citation {
 
         // Penalty
         text(this.penalty, (this.#width / 2) - 3, this.#height - this.#penaltySpacingFromBottom, this.#font, this.moaFt, this.#ctx, 'center', this.#reasonMaxWidth);
-
-        fs.writeFileSync(this.#outputFile, this.#canvas.toBuffer());
     }
 
     async animated() {
-        await this.draw();
-        this.calculate();
-        
-        let citation = await loadImage(this.#outputFile);
-        let framesLocation = './frames';
-        const frameName = 'frame';
+        await this.#draw();
 
-        let canvas = createCanvas(citation.width, citation.height);
+        const encoder = new Encoder(this.#width, this.#height);
+        const canvas = createCanvas(this.#width, this.#height);
+
         let ctx = canvas.getContext('2d');
 
-        let currentFrame = 0;
-
-        function moveBy(amount) {
-            ctx.clearRect(0, 0, citation.width, citation.height);
-            ctx.drawImage(citation, 0, amount); save();
-            currentFrame += 1;
-        }
-
-        function save() {
-            fs.writeFileSync(`${framesLocation}/${frameName}_${currentFrame}.png`, canvas.toBuffer());
+        /**
+         * @param {number} amount
+         * @param {Canvas} canvas
+         */
+        function moveBy(amount, canvas) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(canvas, 0, amount); encoder.addFrame(ctx);
         }
 
         let increments = 2;
@@ -255,9 +253,17 @@ module.exports.Citation = class Citation {
 
         for (let i = 0; i < bigPause / 2; i++) animation.push(0);
 
+        encoder.createReadStream().pipe(fs.createWriteStream(this.#outputFile.match(/\.((png)|(jpg)|(jpeg))/i) ? this.#outputFile.match(/(.+(?=\.((png)|(jpg)|(jpeg))))/i)[0] + '.gif' : this.#outputFile + '.gif'));
+        encoder.setRepeat(0);
+        encoder.setDelay(10);
+        encoder.setQuality(10);
+        encoder.setTransparent('#00000000')
+
+        encoder.start();
         for (let i = 0; i < animation.length; i++) {
-            moveBy(citation.height - animation[i]);
+            moveBy(this.#height - animation[i], this.#canvas);
         }
+        encoder.finish();
     }
 
     /**
