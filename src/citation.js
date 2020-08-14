@@ -382,4 +382,3 @@ module.exports.Citation = class Citation {
     /** @return {number} value **/
     get fontSize() { return this.#fontSize; }
 }
-
