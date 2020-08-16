@@ -253,7 +253,7 @@ module.exports.Citation = class Citation {
 
         for (let i = 0; i < bigPause / 2; i++) animation.push(0);
 
-        encoder.setFrameRate(30);
+        encoder.setDelay(10);
         encoder.setQuality(1);
         encoder.useOptimizer = true;
         encoder.setThreshold(1);
