@@ -1,6 +1,6 @@
 const { createCanvas, Canvas, registerFont, loadImage, Image } = require('canvas');
 const { text, textWrapped, line, dottedLine, barcode, rect, textFitsHeight, textFitsWidth } = require('./util');
-const Encoder = require('gifencoder');
+const Encoder = require('gif-encoder-2');
 
 const fs = require('fs');
 
@@ -253,10 +253,10 @@ module.exports.Citation = class Citation {
 
         for (let i = 0; i < bigPause / 2; i++) animation.push(0);
 
-        encoder.createReadStream().pipe(fs.createWriteStream(this.#outputFile));
-        encoder.setRepeat(0);
-        encoder.setDelay(10);
-        encoder.setQuality(10);
+        encoder.setFrameRate(30);
+        encoder.setQuality(1);
+        encoder.useOptimizer = true;
+        encoder.setThreshold(1);
         encoder.setTransparent('#00000000')
 
         encoder.start();
@@ -264,6 +264,8 @@ module.exports.Citation = class Citation {
             moveBy(this.#height - animation[i], this.#canvas);
         }
         encoder.finish();
+
+        fs.writeFileSync(this.#outputFile, encoder.out.getData())
     }
 
     /**
