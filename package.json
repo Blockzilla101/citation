@@ -1,6 +1,6 @@
 {
     "name": "citation",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "dependencies": {
         "canvas": "^2.6.1",
         "gif-encoder-2": "^1.0.5"
