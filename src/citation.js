@@ -7,7 +7,7 @@ const fs = require('fs');
 function loadAssets() {
     const font = 'BMmini.ttf', altFont = 'megan_serif.ttf';
     const logoFile = 'logo.png'
-    const dataDir = './data';
+    const dataDir = __dirname + '/../data';
 
     if (!fs.existsSync(`${dataDir}`)) throw Error(`No "${dataDir}" folder found in the current working directory`);
     if (!fs.existsSync(`${dataDir}/${font}`)) throw Error(`Font '${font}' is no where to be found`);
