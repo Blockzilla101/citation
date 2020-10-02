@@ -171,7 +171,7 @@ module.exports.Citation = class Citation {
         rect(0, 0, this.width, this.height, this.moaBg, this.#ctx);
 
         // Logo
-        this.#logo = await loadImage('./data/logo.png');
+        this.#logo = await loadImage(`${__dirname + '/../data'}/logo.png`);
         this.#ctx.drawImage(this.#logo, (this.#width / 2) - (this.#logo.height / 2) - 1, this.height - (this.#bottomSeparatorSpacingFromBottom + (this.#logo.height / 2)) + 4);
 
         // Top and bottom dots
