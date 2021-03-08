@@ -153,18 +153,19 @@ module.exports.Citation = class Citation {
                 this.calculate();
             }
 
-            while (!textFitsWidth(this.reason, this.#font, this.#ctx, this.#reasonMaxWidth)) {
-                this.#canvas.width += this.#ctx.measureText(this.reason).width * 0.1;
-                this.#width = this.#canvas.width;
-                this.calculate();
-            }
-
             while (!textFitsHeight(this.reason, this.#font, this.#ctx, this.#reasonMaxHeight)) {
                 let metrics = this.#ctx.measureText(this.reason);
                 this.#canvas.height += (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent) * 0.03;
                 this.#height = this.#canvas.height;
                 this.calculate();
             }
+            
+            // while (!textFitsWidth(this.reason, this.#font, this.#ctx, this.#reasonMaxWidth)) {
+            //     this.#canvas.width += this.#ctx.measureText(this.reason).width * 0.1;
+            //     this.#width = this.#canvas.width;
+            //     this.calculate();
+            // }
+
         }
 
         // Bg
