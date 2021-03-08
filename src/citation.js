@@ -114,6 +114,8 @@ module.exports.Citation = class Citation {
     /** @type {number|null} */
     #penaltySpacingFromBottom = null;
 
+    log = msg => {}
+
     /**
      * @param {string} outputFile
      * @param {number} [width=366]
@@ -263,8 +265,10 @@ module.exports.Citation = class Citation {
         encoder.start();
         for (let i = 0; i < animation.length; i++) {
             moveBy(this.#height - animation[i], this.#canvas);
+            this.log(`\rEncoding frame ${i+1} of ${animation.length}`)
         }
         encoder.finish();
+        this.log('\nEncoding Finished\n')
 
         fs.writeFileSync(this.#outputFile, encoder.out.getData())
     }
