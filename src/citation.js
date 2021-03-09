@@ -1,5 +1,5 @@
 const { createCanvas, Canvas, loadImage, Image } = require('canvas');
-const { text, textWrapped, line, dottedLine, barcode, rect, textFitsHeight, textFitsWidth } = require('./util');
+const { text, textWrapped, line, dottedLine, barcode, rect, textFitsHeight, wrap } = require('./util');
 const Encoder = require('gif-encoder-2');
 
 const fs = require('fs');
@@ -88,26 +88,13 @@ module.exports.Citation = class Citation {
         await this.#createCanvas()
 
         if (this.autoResizeToText) {
-            while (!textFitsWidth(this.title, this.font, this.#ctx, this.#titleMaxWidth)) {
-                this.#canvas.width += this.#ctx.measureText(this.title).width * 0.1;
-                this.#width = this.#canvas.width;
-            }
-
-            while (!textFitsWidth(this.penalty, this.font, this.#ctx, this.#titleMaxWidth)) {
-                this.#canvas.width += this.#ctx.measureText(this.penalty).width * 0.1;
-                this.#width = this.#canvas.width;
-            }
-
-            while (!textFitsHeight(this.reason, this.font, this.#ctx, this.#reasonMaxHeight)) {
-                let metrics = this.#ctx.measureText(this.reason);
+            let wrapped = wrap(this.reason, this.font, this.moaFt, this.#ctx, this.#reasonMaxWidth)
+            while (!textFitsHeight(wrapped, this.font, this.#ctx, this.#reasonMaxHeight)) {
+                let metrics = this.#ctx.measureText(wrapped);
                 this.#canvas.height += (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent) * 0.03;
-                this.#height = this.#canvas.height;
+                this.#height = this.#canvas.height
             }
-            
-            // while (!textFitsWidth(this.reason, this.#font, this.#ctx, this.#reasonMaxWidth)) {
-            //     this.#canvas.width += this.#ctx.measureText(this.reason).width * 0.1;
-            //     this.#width = this.#canvas.width;
-            // }
+            this.height = this.#canvas.height
         }
 
         // Bg
@@ -204,22 +191,24 @@ module.exports.Citation = class Citation {
         return encoder.out.getData()
     }
 
-    set height(value) {
-        if (typeof value !== 'number') throw new Error(`${value} is not a number`)
-        if (value % 2 !== 0) {
-            this.log(`width ${value} is not even | added one too it`)
-            value += 1
-        }
-        this.#height = value;
-    }
-
     set width(value) {
         if (typeof value !== 'number') throw new Error(`${value} is not a number`)
         if (value % 2 !== 0) {
             this.log(`width ${value} is not even | added one too it`)
             value += 1
         }
-        this.#width = value;
+        if (value < 100) throw new Error(`width can't be smaller then 100`)
+        this.#width = Math.round(value);
+    }
+
+    set height(value) {
+        if (typeof value !== 'number') throw new Error(`${value} is not a number`)
+        if (value % 2 !== 0) {
+            this.log(`width ${value} is not even | added one too it`)
+            value += 1
+        }
+        if (value < 110) throw new Error(`height be smaller then 110`)
+        this.#height = Math.round(value);
     }
 
     /** @param {number[]} value */

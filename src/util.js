@@ -85,6 +85,22 @@ function text(text, x, y, font, style, ctx, alignment = 'left', maxWidth) {
  * @param {TextAlignment} [alignment="left"]
  */
 function textWrapped(str, x, y, font, style, ctx, maxWidth, maxHeight, alignment = "left") {
+    let newStr = wrap(str, font, style, ctx, maxWidth)
+
+    if (typeof maxHeight !== 'undefined' && maxHeight > 0 && newStr.includes('\n')) {
+        let metrics = ctx.measureText(newStr);
+        let height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+        while (height > maxHeight) {
+            newStr = newStr.substr(0, newStr.lastIndexOf('\n'));
+            metrics = ctx.measureText(newStr);
+            height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+        }
+    }
+
+    text(newStr, x, y, font, style, ctx, alignment, maxWidth);
+}
+
+function wrap(str, font, style, ctx, maxWidth) {
     let words = str.split(" ");
     let lines = [];
     let currentLine = words[0];
@@ -103,20 +119,7 @@ function textWrapped(str, x, y, font, style, ctx, maxWidth, maxHeight, alignment
         }
     }
     lines.push(currentLine);
-
-    let newStr = lines.join('\n');
-
-    if (typeof maxHeight !== 'undefined' && maxHeight > 0 && newStr.includes('\n')) {
-        let metrics = ctx.measureText(newStr);
-        let height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
-        while (height > maxHeight) {
-            newStr = newStr.substr(0, newStr.lastIndexOf('\n'));
-            metrics = ctx.measureText(newStr);
-            height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
-        }
-    }
-
-    text(newStr, x, y, font, style, ctx, alignment, maxWidth);
+    return lines.join('\n');
 }
 
 /**
@@ -164,7 +167,7 @@ function textFitsWidth(text, font, ctx, maxWidth) {
  * @param {string} text
  * @param {string} font
  * @param {RenderingContext} ctx
- * @param {number|null} maxHeight
+ * @param {number} maxHeight
  * @return {boolean}
  */
 function textFitsHeight(text, font, ctx, maxHeight) {
@@ -181,5 +184,6 @@ module.exports = {
     textWrapped,
     text,
     textFitsHeight,
-    textFitsWidth
+    textFitsWidth,
+    wrap
 }
