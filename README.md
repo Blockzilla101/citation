@@ -1,4 +1,8 @@
 Node.js library to create papers please citations.
+### Installation
+Needs node.js version `15.x.x`<br>
+Installing with npm `npm i --save Blockzilla101/citation`<br>
+Installing with yarn `yarn add Blockzilla101/citation`
 ### Usage
 ```js
 const { Citation } = require('citation')
