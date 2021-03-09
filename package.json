@@ -6,5 +6,5 @@
         "gif-encoder-2": "^1.0.5"
     },
     "author": "Blockzilla101",
-    "main": "src/citation.js"
+    "main": "index.js"
 }

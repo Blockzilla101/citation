@@ -140,7 +140,7 @@ function barcode(x, y, pattern, barHeight, barWidth, styleFilled, styleEmpty,  c
  * @param {number} y
  * @param {number} w
  * @param {number} h
- * @param {Style} style
+ * @param {string|Style} style
  * @param {RenderingContext} ctx
  */
 function rect(x, y, w, h, style, ctx) {
@@ -174,12 +174,12 @@ function textFitsHeight(text, font, ctx, maxHeight) {
 }
 
 module.exports = {
-    line: line,
-    dottedLine: dottedLine,
-    rect: rect,
-    barcode: barcode,
-    textWrapped: textWrapped,
-    text: text,
-    textFitsHeight: textFitsHeight,
-    textFitsWidth: textFitsWidth
+    line,
+    dottedLine,
+    rect,
+    barcode,
+    textWrapped,
+    text,
+    textFitsHeight,
+    textFitsWidth
 }
