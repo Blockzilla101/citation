@@ -19,7 +19,7 @@ module.exports.Citation = class Citation {
     #height = 160;
 
     /** @type {boolean} Should it resize automatically when text is overflowing */
-    wrapReason = false;
+    resizeReason = false;
 
     /** @type {Image} The logo put at the mid-bottom the citation */
     #logo = null
@@ -87,7 +87,7 @@ module.exports.Citation = class Citation {
     async #draw() {
         await this.#createCanvas()
 
-        if (this.wrapReason) {
+        if (this.resizeReason) {
             let wrapped = wrap(this.reason, this.font, this.moaFt, this.#ctx, this.#reasonMaxWidth)
             while (!textFitsHeight(wrapped, this.font, this.#ctx, this.#reasonMaxHeight)) {
                 let metrics = this.#ctx.measureText(wrapped);
