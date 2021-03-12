@@ -20,6 +20,12 @@ module.exports.Citation = class Citation {
 
     /** @type {boolean} Should it resize automatically when text is overflowing */
     resizeReason = false;
+    /** @type {number}
+     * Maximum height to resize to before truncating
+     * Must be greater then or equal to current height or this parameter is ignored
+     * Can cause issues with reason text being very close to the bottom separator
+    */
+    resizeLimit = 0;
 
     /** @type {Image} The logo put at the mid-bottom the citation */
     #logo = null
@@ -89,10 +95,18 @@ module.exports.Citation = class Citation {
 
         if (this.resizeReason) {
             let wrapped = wrap(this.reason, this.font, this.moaFt, this.#ctx, this.#reasonMaxWidth)
+            const ogHeight = this.#height
             while (!textFitsHeight(wrapped, this.font, this.#ctx, this.#reasonMaxHeight)) {
                 let metrics = this.#ctx.measureText(wrapped);
                 this.#canvas.height += (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent) * 0.03;
                 this.#height = this.#canvas.height
+                if (this.resizeLimit > ogHeight) {
+                    if (this.#height > this.resizeLimit) {
+                        this.#canvas.height = this.resizeLimit
+                        this.#height = this.resizeLimit
+                        break
+                    }
+                }
             }
             this.height = this.#canvas.height
         }
