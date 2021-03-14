@@ -1,4 +1,4 @@
-const { NodeCanvasRenderingContext2D } = require('canvas');
+const { NodeCanvasRenderingContext2D, createCanvas } = require('canvas');
 
 /** @typedef {NodeCanvasRenderingContext2D} RenderingContext*/
 /** @typedef {string|CanvasGradient|CanvasPattern} Style*/
@@ -176,6 +176,18 @@ function textFitsHeight(text, font, ctx, maxHeight) {
     return metrics.emHeightDescent - (metrics.emHeightAscent / 2) <= maxHeight;
 }
 
+function tint(image, color, opacity = 0.5) {
+    const canvas = createCanvas(image.width, image.height)
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = color;
+    ctx.globalAlpha = opacity;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalCompositeOperation = "destination-atop"
+    ctx.globalAlpha = 1;
+    ctx.drawImage(image, 0, 0);
+    return canvas
+}
+
 module.exports = {
     line,
     dottedLine,
@@ -185,5 +197,6 @@ module.exports = {
     text,
     textFitsHeight,
     textFitsWidth,
-    wrap
+    wrap,
+    tint
 }

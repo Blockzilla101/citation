@@ -1,5 +1,5 @@
 const { createCanvas, Canvas, loadImage, Image } = require('canvas');
-const { text, textWrapped, line, dottedLine, barcode, rect, textFitsHeight, wrap } = require('./util');
+const { text, textWrapped, line, dottedLine, barcode, rect, textFitsHeight, wrap, tint } = require('./util');
 const Encoder = require('gif-encoder-2');
 
 const fs = require('fs');
@@ -119,6 +119,11 @@ module.exports.Citation = class Citation {
      * @type {number}
      */
     fontSize = 16;
+    /**
+     * Scale of the rendered logo
+     * @type {number}
+     */
+    logoScale = 1;
 
     /**
      * For verbose logging
@@ -189,7 +194,7 @@ module.exports.Citation = class Citation {
         rect(0, 0, this.width, this.height, this.moaBg, this.#ctx);
 
         // Logo
-        this.#ctx.drawImage(this.#logo, (this.#width / 2) - (this.#logo.height / 2) - 1, this.height - (this.#bottomSeparatorSpacingFromBottom + (this.#logo.height / 2)) + 4);
+        this.#ctx.drawImage(tint(this.#logo, this.moaFg), (this.#width / 2) - ((this.#logo.height * this.logoScale) / 2) - 1, this.height - (this.#bottomSeparatorSpacingFromBottom + ((this.#logo.height * this.logoScale) / 2)) + 4, this.#logo.width * this.logoScale, this.#logo.height * this.logoScale);
 
         // Top and bottom dots
         dottedLine(0, this.topBottomDotSize / 2, this.#width, this.topBottomDotSize / 2, this.moaFg, [this.topBottomDotSize, this.topBottomDotSize], this.#ctx, this.topBottomDotSize);
