@@ -362,7 +362,7 @@ module.exports.Citation = class Citation {
         return this.#sideDotsSpacingFromRight + this.sideDotSize + 8
     }
     get #barcodeSpacingFromTop() {
-        return this.topBottomDotSize + 4
+        return this.#topSeparatorSpacingFromTop - this.#titleSpacingFromTop
     }
     get #textSpacingFromLeft() {
         return this.sideDotSpacing + this.sideDotSize + 12
@@ -378,7 +378,7 @@ module.exports.Citation = class Citation {
     get #reasonSpacingFromTop() {
         this.#ctx.font = this.font
         const metrics = this.#ctx.measureText(this.reason)
-        return this.#topSeparatorSpacingFromTop + 8 + (metrics.actualBoundingBoxAscent)
+        return this.#topSeparatorSpacingFromTop + (this.fontSize / 2) + (metrics.actualBoundingBoxAscent)
     }
     get #reasonMaxWidth() {
         return this.#width - (this.#textSpacingFromLeft + this.#sideDotsSpacingFromRight + this.sideDotSize)
