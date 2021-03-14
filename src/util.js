@@ -173,7 +173,7 @@ function textFitsWidth(text, font, ctx, maxWidth) {
 function textFitsHeight(text, font, ctx, maxHeight) {
     ctx.font = font;
     let metrics = ctx.measureText(text);
-    return metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent <= maxHeight;
+    return metrics.emHeightDescent - (metrics.emHeightAscent / 2) <= maxHeight;
 }
 
 module.exports = {

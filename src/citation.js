@@ -6,60 +6,123 @@ const fs = require('fs');
 
 /** @class Citation */
 module.exports.Citation = class Citation {
-    /** @type {string|*} Background color of the citation */
+    /**
+     * Background color of the citation
+     * @type {string}
+     */
     moaBg = '#F3D7E6';
-    /** @type {string|*} Foreground color of the citation */
+    /**
+     * Foreground color of the citation
+     * @type {string}
+     */
     moaFg = '#BFA8A8';
-    /** @type {string|*} The font and separator color of the citation */
+    /**
+     * The font and separator color of the citation
+     * @type {string}
+     */
     moaFt = '#5A5559';
 
-    /** @type {number} Width of the citation*/
+    /**
+     * Width of the citation
+     * @type {number}
+     */
     #width = 366;
-    /** @type {number} Height of the citation */
+    /**
+     * Height of the citation
+     * @type {number}
+     */
     #height = 160;
 
-    /** @type {boolean} Should it resize automatically when text is overflowing */
+    /**
+     * Should it resize automatically when text is overflowing
+     * @type {boolean}
+     */
     resizeReason = false;
-    /** @type {number}
+    /**
      * Maximum height to resize to before truncating
      * Must be greater then or equal to current height or this parameter is ignored
      * Can cause issues with reason text being very close to the bottom separator
+     * @type {number}
     */
     resizeLimit = 0;
 
-    /** @type {Image} The logo put at the mid-bottom the citation */
+    /**
+     * The logo put at the mid-bottom the citation
+     * @type {Image}
+     */
     #logo = null
 
-    /** @type {RenderingContext} */
-    #ctx = null;
-    /** @type {Canvas} */
+    /**
+     * @type {Canvas}
+     */
     #canvas = null;
+    /**
+     * @type {RenderingContext}
+     */
+    #ctx = null;
 
-    /** @type {string} Title of the citation*/
+    /**
+     * Title of the citation
+     * @type {string}
+     */
     title = "M.O.A. CITATION";
-    /** @type {string} Content/Reason for the citation*/
+    /**
+     * Content/Reason for the citation
+     * @type {string}
+     */
     reason = 'Protocol Violated.\nEntry Permit: Invalid Name';
-    /** @type {string} Penalties of the citation*/
+    /**
+     * Penalties of the citation
+     * @type {string}
+     */
     penalty = 'LAST WARNING - NO PENALTY';
 
-    /** @type {number[]} The barcode at the top left */
+    /**
+     * The barcode at the top left penalty
+     * @type {number[]}
+     */
     #barcode = [1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1];
 
-    /** @type {number} Dot size for the dashed line at the top and bottom */
+    /**
+     * Dot size for the dotted line at the top & bottom
+     * @type {number}
+     */
     topBottomDotSize = 2;
-    /** @type {number} Dot size for the dots at the sides of the citation */
+    /**
+     * Dot size for the dots at the sides of the citation
+     * @type {number}
+     */
     sideDotSize = 6;
-    /** @type {number} Spacing between the dots at the sides of the citation */
+    /**
+     * Spacing between the dots at the sides of the citation
+     * @type {number}
+     */
     sideDotSpacing = 4;
-    /** @type {number} Separator dot size */
+    /**
+     * Size of dots in the dotted lines that separate the title, reason and penalty
+     * @type {number}
+     */
     separatorDotSize = 2;
-    /** @type {number} */
+    /**
+     * Width of each strip of the barcode
+     * @type {number}
+     */
     barcodeWidth = 2;
-    /** @type {number} */
+    /**
+     * Height of each strip of the barcode <br>
+     * Dot at the left is half of this height
+     * @type {number}
+     */
     barcodeHeight = 12;
-    /** @type {number} */
+    /**
+     * Size of the font used to render
+     * @type {number}
+     */
     fontSize = 16;
 
+    /**
+     * For verbose logging
+     */
     log = (...args) => { }
 
     /**
@@ -71,6 +134,10 @@ module.exports.Citation = class Citation {
         this.height = height;
     }
 
+    /**
+     * Instantiates the canvas and loads the logo
+     * @return {Promise<void>}
+     */
     async #createCanvas() {
         this.#canvas = createCanvas(this.#width, this.#height);
         this.#ctx = this.#canvas.getContext('2d');
@@ -81,6 +148,13 @@ module.exports.Citation = class Citation {
         if (!this.#logo) this.#logo = await loadImage(`${__dirname + '/../data'}/logo.png`);
     }
 
+    /**
+     * @param {string} [out] Path to output file
+     * @param {boolean} [gif=false] Render a gif version
+     * @param {number} [frameRate=10] Frame rate of the rendered gif
+     * @param {number[]} [yPos=null] Y position of the citation at each frame
+     * @return {Promise<Buffer>} The rendered gif or png. If **out** is specified then it also gets piped into that file
+     */
     async render(out, gif = false, frameRate = 10, yPos = null) {
         await this.#draw()
         let data = gif ? await this.#animated(frameRate, yPos) : this.#canvas.toBuffer()
@@ -96,15 +170,15 @@ module.exports.Citation = class Citation {
         if (this.resizeReason) {
             let wrapped = wrap(this.reason, this.font, this.moaFt, this.#ctx, this.#reasonMaxWidth)
             const ogHeight = this.#height
-            while (!textFitsHeight(wrapped, this.font, this.#ctx, this.#reasonMaxHeight)) {
+            if (!textFitsHeight(wrapped, this.font, this.#ctx, this.#reasonMaxHeight)) {
+                this.#ctx.font = this.font
                 let metrics = this.#ctx.measureText(wrapped);
-                this.#canvas.height += (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent) * 0.03;
+                this.#canvas.height += (metrics.emHeightDescent - (metrics.emHeightAscent / 2)) - this.#reasonMaxHeight;
                 this.#height = this.#canvas.height
                 if (this.resizeLimit > ogHeight) {
                     if (this.#height > this.resizeLimit) {
                         this.#canvas.height = this.resizeLimit
                         this.#height = this.resizeLimit
-                        break
                     }
                 }
             }
@@ -146,19 +220,33 @@ module.exports.Citation = class Citation {
         text(this.penalty, (this.#width / 2) - 3, this.#height - this.#penaltySpacingFromBottom, this.font, this.moaFt, this.#ctx, 'center', this.#reasonMaxWidth);
     }
 
+    /**
+     * @param {number} [frameRate=10]
+     * @param {number[]} [yPos=null]
+     *      Y position of the citation at each frame<br>
+     *      Default: Starts at first big at the size,
+     *      keeps incrementing by 2 till the first separator,
+     *      waits there for 14 frames,
+     *      then keeps incrementing by 2 till the second/last separator,
+     *      waits there for 14 frames,
+     *      then keeps incrementing by 2 till the entire citation is visible / y value = 0,
+     *      waits for 100 frames,
+     *      starts decrementing by 2 till the entire citation is gone / y value = height of citation
+     * @return {Promise<Buffer>} The rendered gif
+     */
     async #animated(frameRate = 10, yPos = null) {
         const encoder = new Encoder(this.#width, this.#height);
         const canvas = createCanvas(this.#width, this.#height);
-        const ctx = canvas.getContext('2d');
-
-        let increments = 2;
-        let pause = 14;
-        let bigPause = 100;
+        const ctx = canvas.getContext('2d')
 
         // stores y values of citation position
         const animation = yPos ?? [];
 
         if (!yPos) {
+            let increments = 2;
+            let pause = 14;
+            let bigPause = 100;
+
             let startingPoint = this.#sideDotsSpacingFromTop;
             let stopOne = this.#topSeparatorSpacingFromTop + increments;
             let stopTwo = this.height - this.#bottomSeparatorSpacingFromBottom + increments;
@@ -262,7 +350,9 @@ module.exports.Citation = class Citation {
     }
 
     get #topSeparatorSpacingFromTop() {
-        return this.topBottomDotSize + (this.fontSize * 2)
+        this.#ctx.font = this.font
+        const metrics = this.#ctx.measureText(this.title)
+        return this.topBottomDotSize + (this.title.includes('\n') ? metrics.emHeightDescent + 3: metrics.actualBoundingBoxAscent * 2 - 2)
     }
     get #bottomSeparatorSpacingFromBottom() {
         return this.topBottomDotSize + (this.fontSize * 2) + 10
@@ -286,7 +376,9 @@ module.exports.Citation = class Citation {
     }
 
     get #reasonSpacingFromTop() {
-        return this.#topSeparatorSpacingFromTop + this.separatorDotSize + this.fontSize + 4
+        this.#ctx.font = this.font
+        const metrics = this.#ctx.measureText(this.reason)
+        return this.#topSeparatorSpacingFromTop + 8 + (metrics.actualBoundingBoxAscent)
     }
     get #reasonMaxWidth() {
         return this.#width - (this.#textSpacingFromLeft + this.#sideDotsSpacingFromRight + this.sideDotSize)
