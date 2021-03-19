@@ -1,7 +1,7 @@
-const { Citation } = require('./src/citation')
-const { registerFont } = require('canvas')
-const path = require('path')
-const fs = require('fs')
+import { Citation } from './src/citation'
+import { registerFont } from 'canvas'
+import path from 'path'
+import fs from 'fs'
 
 const dataDir = path.join(__dirname, 'data')
 const fontFile = path.join(dataDir, 'BMmini.ttf')

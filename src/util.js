@@ -1,8 +1,7 @@
-const { NodeCanvasRenderingContext2D, createCanvas } = require('canvas');
+import { createCanvas } from 'canvas';
 
-/** @typedef {NodeCanvasRenderingContext2D} RenderingContext*/
-/** @typedef {string|CanvasGradient|CanvasPattern} Style*/
-/** @typedef {"center"|"end"|"left"|"right"|"start"} TextAlignment*/
+/** @typedef {string|CanvasGradient|CanvasPattern} Style */
+/** @typedef {"center"|"end"|"left"|"right"|"start"} TextAlignment */
 
 /**
  * @param {number} startX
@@ -14,7 +13,7 @@ const { NodeCanvasRenderingContext2D, createCanvas } = require('canvas');
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} [width=1]
  */
-function dottedLine(startX, startY,endX, endY, style, pattern, ctx, width = 1) {
+export function dottedLine(startX, startY,endX, endY, style, pattern, ctx, width = 1) {
     ctx.beginPath();
     ctx.strokeStyle = style;
     ctx.setLineDash(pattern);
@@ -33,7 +32,7 @@ function dottedLine(startX, startY,endX, endY, style, pattern, ctx, width = 1) {
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} [width=1]
  */
-function line(startX, startY,endX, endY, style , ctx, width = 1) {
+export function line(startX, startY,endX, endY, style , ctx, width = 1) {
     ctx.beginPath();
     ctx.strokeStyle = style;
     ctx.setLineDash([]);
@@ -53,7 +52,7 @@ function line(startX, startY,endX, endY, style , ctx, width = 1) {
  * @param {TextAlignment} [alignment="left"]
  * @param {number} [maxWidth=0]
  */
-function text(text, x, y, font, style, ctx, alignment = 'left', maxWidth) {
+export function text(text, x, y, font, style, ctx, alignment = 'left', maxWidth) {
     ctx.fillStyle = style
     ctx.font = font;
     ctx.textAlign = alignment
@@ -84,7 +83,7 @@ function text(text, x, y, font, style, ctx, alignment = 'left', maxWidth) {
  * @param {number} [maxHeight]
  * @param {TextAlignment} [alignment="left"]
  */
-function textWrapped(str, x, y, font, style, ctx, maxWidth, maxHeight, alignment = "left") {
+export function textWrapped(str, x, y, font, style, ctx, maxWidth, maxHeight, alignment = "left") {
     let newStr = wrap(str, font, style, ctx, maxWidth)
 
     if (typeof maxHeight !== 'undefined' && maxHeight > 0 && newStr.includes('\n')) {
@@ -100,7 +99,7 @@ function textWrapped(str, x, y, font, style, ctx, maxWidth, maxHeight, alignment
     text(newStr, x, y, font, style, ctx, alignment, maxWidth);
 }
 
-function wrap(str, font, style, ctx, maxWidth) {
+export function wrap(str, font, style, ctx, maxWidth) {
     let words = str.split(" ");
     let lines = [];
     let currentLine = words[0];
@@ -132,7 +131,7 @@ function wrap(str, font, style, ctx, maxWidth) {
  * @param {Style} styleEmpty
  * @param {RenderingContext} ctx
  */
-function barcode(x, y, pattern, barHeight, barWidth, styleFilled, styleEmpty,  ctx) {
+export function barcode(x, y, pattern, barHeight, barWidth, styleFilled, styleEmpty,  ctx) {
     for (let i = 0; i < pattern.length; i++) {
         line(x + (barWidth * i) + (barWidth / 2), y, x + (barWidth * i) + (barWidth / 2), y + barHeight, (pattern[i] === 0 ? styleEmpty : styleFilled), ctx, barWidth);
     }
@@ -146,7 +145,7 @@ function barcode(x, y, pattern, barHeight, barWidth, styleFilled, styleEmpty,  c
  * @param {string|Style} style
  * @param {RenderingContext} ctx
  */
-function rect(x, y, w, h, style, ctx) {
+export function rect(x, y, w, h, style, ctx) {
     ctx.fillStyle = style;
     ctx.fillRect(x, y, w, h);
 }
@@ -158,7 +157,7 @@ function rect(x, y, w, h, style, ctx) {
  * @param {number|null} maxWidth
  * @return {boolean}
  */
-function textFitsWidth(text, font, ctx, maxWidth) {
+export function textFitsWidth(text, font, ctx, maxWidth) {
     ctx.font = font;
     return ctx.measureText(text).width <= maxWidth;
 }
@@ -170,13 +169,13 @@ function textFitsWidth(text, font, ctx, maxWidth) {
  * @param {number} maxHeight
  * @return {boolean}
  */
-function textFitsHeight(text, font, ctx, maxHeight) {
+export function textFitsHeight(text, font, ctx, maxHeight) {
     ctx.font = font;
     let metrics = ctx.measureText(text);
     return metrics.emHeightDescent - (metrics.emHeightAscent / 2) <= maxHeight;
 }
 
-function tint(image, color, opacity = 0.5) {
+export function tint(image, color, opacity = 0.5) {
     const canvas = createCanvas(image.width, image.height)
     const ctx = canvas.getContext('2d')
     ctx.fillStyle = color;
@@ -186,17 +185,4 @@ function tint(image, color, opacity = 0.5) {
     ctx.globalAlpha = 1;
     ctx.drawImage(image, 0, 0);
     return canvas
-}
-
-module.exports = {
-    line,
-    dottedLine,
-    rect,
-    barcode,
-    textWrapped,
-    text,
-    textFitsHeight,
-    textFitsWidth,
-    wrap,
-    tint
 }
