@@ -1,11 +1,11 @@
 import { createCanvas, Canvas, loadImage, Image } from 'canvas';
-import { text, textWrapped, line, dottedLine, barcode, rect, textFitsHeight, wrap, tint } from './util';
+import { text, textWrapped, line, dottedLine, barcode, rect, textFitsHeight, wrap, tint } from './util.js';
 import Encoder from 'gif-encoder-2';
 
 const fs = require('fs');
 
 /** @class Citation */
-module.exports.Citation = class Citation {
+export class Citation {
     /**
      * Background color of the citation
      * @type {string}
