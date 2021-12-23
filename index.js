@@ -1,4 +1,4 @@
-import { Citation } from './src/citation'
+import { Citation } from './src/citation.js'
 import { registerFont } from 'canvas'
 import path from 'path'
 import fs from 'fs'
