@@ -1,7 +1,6 @@
-import { createCanvas, Canvas, loadImage, Image } from 'canvas';
-import { text, textWrapped, line, dottedLine, barcode, rect, textFitsHeight, wrap, tint } from './util.js';
-import Encoder from 'gif-encoder-2';
-
+const { createCanvas, Canvas, loadImage, Image } = require('canvas');
+const { text, textWrapped, line, dottedLine, barcode, rect, textFitsHeight, wrap, tint } = require('./util');
+const Encoder = require('gif-encoder-2');
 const fs = require('fs');
 
 /** @class Citation */
