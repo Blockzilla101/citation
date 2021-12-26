@@ -4,7 +4,7 @@ const Encoder = require('gif-encoder-2');
 const fs = require('fs');
 
 /** @class Citation */
-export class Citation {
+module.exports.Citation = class {
     /**
      * Background color of the citation
      * @type {string}
