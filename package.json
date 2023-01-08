@@ -1,10 +1,14 @@
 {
     "name": "@blockzilla101/citation",
-    "version": "1.2.0",
+    "version": "1.2.2",
     "dependencies": {
         "canvas": "^2.6.1",
         "gif-encoder-2": "^1.0.5"
     },
     "author": "Blockzilla101",
     "main": "index.js"
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Blockzilla101/citation"
+    }
 }
