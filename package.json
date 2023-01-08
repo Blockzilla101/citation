@@ -1,5 +1,5 @@
 {
-    "name": "citation",
+    "name": "@blockzilla101/citation",
     "version": "1.2.0",
     "dependencies": {
         "canvas": "^2.6.1",
