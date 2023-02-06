@@ -1,4 +1,5 @@
-const { createCanvas, Canvas, loadImage, Image } = require('canvas');
+// const { createCanvas, Canvas, loadImage, Image } = require('canvas');
+const { createCanvas, loadImage, Image, Canvas } = require('@napi-rs/canvas')
 const { text, textWrapped, line, dottedLine, barcode, rect, textFitsHeight, wrap, tint } = require('./util');
 const Encoder = require('gif-encoder-2');
 const fs = require('fs');
@@ -146,9 +147,6 @@ module.exports.Citation = class {
         this.#canvas = createCanvas(this.#width, this.#height);
         this.#ctx = this.#canvas.getContext('2d');
 
-        this.#ctx.imageSmoothingEnabled = false;
-        this.#ctx.antialias = 'none';
-
         if (!this.#logo) this.#logo = await loadImage(`${__dirname + '/../data'}/logo.png`);
     }
 
@@ -161,7 +159,8 @@ module.exports.Citation = class {
      */
     async render(out, gif = false, frameRate = 10, yPos = null) {
         await this.#draw()
-        let data = gif ? await this.#animated(frameRate, yPos) : this.#canvas.toBuffer()
+        const b = this.#canvas.toBuffer('image/png');
+        let data = gif ? await this.#animated(frameRate, yPos) : b
         if (out) {
             fs.writeFileSync(out, data)
         }
@@ -174,19 +173,19 @@ module.exports.Citation = class {
         if (this.resizeReason) {
             let wrapped = wrap(this.reason, this.font, this.moaFt, this.#ctx, this.#reasonMaxWidth)
             const ogHeight = this.#height
+            let newHeight = this.#height;
             if (!textFitsHeight(wrapped, this.font, this.#ctx, this.#reasonMaxHeight)) {
                 this.#ctx.font = this.font
                 let metrics = this.#ctx.measureText(wrapped);
-                this.#canvas.height += (metrics.emHeightDescent - (metrics.emHeightAscent / 2)) - this.#reasonMaxHeight;
-                this.#height = this.#canvas.height
+                newHeight += (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent + 2) * wrapped.split('\n').length - this.#reasonMaxHeight;
                 if (this.resizeLimit > ogHeight) {
-                    if (this.#height > this.resizeLimit) {
-                        this.#canvas.height = this.resizeLimit
-                        this.#height = this.resizeLimit
+                    if (newHeight > this.resizeLimit) {
+                        newHeight = this.resizeLimit
                     }
                 }
             }
-            this.height = this.#canvas.height
+            this.#height = newHeight
+            await this.#createCanvas()
         }
 
         // Bg
