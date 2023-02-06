@@ -73,6 +73,8 @@ function text(fillText, x, y, font, style, ctx, alignment = 'left', maxWidth) {
     ctx.font = font;
     ctx.textAlign = alignment
 
+    console.log(x, y)
+
     ctx.fillText(fillText, x, y, maxWidth);
 }
 
