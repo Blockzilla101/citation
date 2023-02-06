@@ -1,5 +1,5 @@
 const { Citation } = require('./src/citation')
-const { registerFont } = require('canvas')
+const { GlobalFonts } = require('@napi-rs/canvas')
 const path = require('path')
 const fs = require('fs')
 
@@ -11,6 +11,6 @@ if (!fs.existsSync(dataDir)) throw new Error(`${dataDir} is no where to be found
 if (!fs.existsSync(fontFile)) throw new Error(`Font ${fontFile} is no where to be found`)
 if (!fs.existsSync(logo)) throw new Error(`Logo ${logo} is no where to be found`)
 
-registerFont(fontFile, { family: 'BMmini' });
+GlobalFonts.registerFromPath(path.join(__dirname, 'data', 'BMmini.ttf'), 'BMmini')
 
 module.exports = { Citation }

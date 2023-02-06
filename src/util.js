@@ -1,6 +1,6 @@
-const { NodeCanvasRenderingContext2D, createCanvas } = require('canvas');
+const { createCanvas, SKRSContext2D } = require('@napi-rs/canvas');
 
-/** @typedef {NodeCanvasRenderingContext2D} RenderingContext*/
+/** @typedef {SKRSContext2D} RenderingContext*/
 /** @typedef {string|CanvasGradient|CanvasPattern} Style*/
 /** @typedef {"center"|"end"|"left"|"right"|"start"} TextAlignment*/
 
@@ -44,7 +44,7 @@ function line(startX, startY,endX, endY, style , ctx, width = 1) {
 }
 
 /**
- * @param {string} text
+ * @param {string} fillText
  * @param {number} x
  * @param {number} y
  * @param {string} font
@@ -53,24 +53,27 @@ function line(startX, startY,endX, endY, style , ctx, width = 1) {
  * @param {TextAlignment} [alignment="left"]
  * @param {number} [maxWidth=0]
  */
-function text(text, x, y, font, style, ctx, alignment = 'left', maxWidth) {
+function text(fillText, x, y, font, style, ctx, alignment = 'left', maxWidth) {
+    if (fillText.includes('\n')) {
+        const metrics = ctx.measureText(fillText)
+        const height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent + 2
+        
+        let currY = y;
+        const lines = fillText.split('\n')
+        for (const line of lines) {
+            text(line, x, currY, font, style, ctx, alignment, maxWidth)
+            currY += height
+        }
+
+        return
+    }
+
     ctx.fillStyle = style
+    ctx.strokeStyle = style
     ctx.font = font;
     ctx.textAlign = alignment
-    if (typeof maxWidth !== 'undefined') {
-        const metrics = ctx.measureText(text);
-        const size = metrics.emHeightAscent + metrics.emHeightDescent;
 
-        if (maxWidth < 0) maxWidth = 0;
-        let width = ctx.measureText(text).width;
-        while(width > maxWidth) {
-            if (width - maxWidth > maxWidth) text = text.substr(0, text.length - (width / size));
-            text = text.substr(0, text.length - 1);
-
-            width = ctx.measureText(text).width
-        }
-    }
-    ctx.fillText(text, x, y);
+    ctx.fillText(fillText, x, y, maxWidth);
 }
 
 /**
@@ -86,40 +89,31 @@ function text(text, x, y, font, style, ctx, alignment = 'left', maxWidth) {
  */
 function textWrapped(str, x, y, font, style, ctx, maxWidth, maxHeight, alignment = "left") {
     let newStr = wrap(str, font, style, ctx, maxWidth)
-
-    if (typeof maxHeight !== 'undefined' && maxHeight > 0 && newStr.includes('\n')) {
-        let metrics = ctx.measureText(newStr);
-        let height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
-        while (height > maxHeight) {
-            newStr = newStr.substr(0, newStr.lastIndexOf('\n'));
-            metrics = ctx.measureText(newStr);
-            height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
-        }
-    }
-
     text(newStr, x, y, font, style, ctx, alignment, maxWidth);
 }
 
 function wrap(str, font, style, ctx, maxWidth) {
-    let words = str.split(" ");
-    let lines = [];
-    let currentLine = words[0];
-
     ctx.font = font;
-    ctx.style = style;
+    ctx.fillStyle = style
 
-    for (let i = 1; i < words.length; i++) {
-        let word = words[i];
-        let width = ctx.measureText(currentLine + " " + word).width;
-        if (width < maxWidth) {
-            currentLine += " " + word;
-        } else {
-            lines.push(currentLine);
-            currentLine = word;
+    const lines = str.split('\n')
+    const newStr = []
+    for (const line of lines) {
+        const words = line.split(' ');
+        let currStr = []
+        for (const word of words) {
+            currStr.push(word)
+            if (ctx.measureText(currStr.join(' ')).width > maxWidth) {
+                const lastWord = currStr.pop()
+                newStr.push(currStr.join(' '))
+                currStr = []
+                currStr.push(lastWord)
+            }
         }
+        newStr.push(currStr.join(' ').trim())
     }
-    lines.push(currentLine);
-    return lines.join('\n');
+
+    return newStr.join('\n').trim()
 }
 
 /**
@@ -173,7 +167,7 @@ function textFitsWidth(text, font, ctx, maxWidth) {
 function textFitsHeight(text, font, ctx, maxHeight) {
     ctx.font = font;
     let metrics = ctx.measureText(text);
-    return metrics.emHeightDescent - (metrics.emHeightAscent / 2) <= maxHeight;
+    return (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent + 2) * text.split('\n').length <= maxHeight;
 }
 
 function tint(image, color, opacity = 0.5) {
