@@ -23,3 +23,6 @@ citation.render('citation.png')
 citation.render('citation.gif', true)
 ```
 `render()` returns the rendered image or gif as a buffer.
+### Output
+![514702888-d958099e-52db-415c-8c12-55193f49573f](https://github.com/user-attachments/assets/f2bd3de1-2854-4750-9347-49f41376815e)
+<img width="450" height="200" alt="514702890-34095a61-1e79-4bc8-a792-198b5c14ace6" src="https://github.com/user-attachments/assets/6b269a7d-1609-4088-960e-d02bd157ca95" />
